@@ -1,9 +1,9 @@
-from pympg.pympg import pympg
+from pympg.pympg import PyMpg
 from time import sleep
 
 
 def main():
-    m = pympg()
+    m = PyMpg()
     p = '/home/tim/Music/Twenty One Pilots - Vessel (2013)/04_-_House_of_Gold.mp3'
     m.playfile(p)
 
