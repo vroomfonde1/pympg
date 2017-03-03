@@ -10,7 +10,7 @@ import subprocess
 _LOGGER = logging.getLogger(__name__)
 
 
-class pympg(object):
+class PyMpg(object):
     """Implementation of mpg123 media player."""
     CMND = 'mpg123'
     STATE_IDLE = 0
@@ -47,6 +47,7 @@ class pympg(object):
         threading.Thread(target=self._mpg123_sm, daemon=True).start()
 
     def _clear_song_tags(self):
+        """ Util function to reset file information."""
         self._currentsong = ''
         self._title = ''
         self._artist = ''
@@ -70,7 +71,6 @@ class pympg(object):
             _LOGGER.debug('%s', line)
             line = line.strip('\r\n')
             if line.startswith('@F'):
-                """@F 0 279 0.00 6.70"""
                 args = line.split()
                 self._currentoffset = float(args[3])
                 self._duration = float(args[4])
@@ -98,16 +98,12 @@ class pympg(object):
                 self._year = line.replace(id3v2_year, '')
                 continue
             if line.startswith('@I ID3:'):
-                """ @I ID3:artist  album  year  comment genretext
-                    where artist,album and comment are exactly 30 characters each,
-                    year is 4 characters, genre text unspecified."""
                 self._artist = line[7:36]
                 self._album = line[37:66]
                 self._year = line[67:70]
                 self._title = ''
                 continue
             if line.startswith('@V'):
-                """@V 30.000000%"""
                 args = line.split()
                 self._volume = float(args[1])
                 continue
@@ -129,33 +125,44 @@ class pympg(object):
             self.popen = None
 
     def playfile(self, file=None):
+        """ Load and start plating file."""
         self._clear_song_tags()
         self._currentsong = file
         self.sendmessage('LOAD ' + file)
 
     def pause(self):
+        """ Pause playback, if paused."""
         if self._state == self.STATE_PLAYING:
             self.sendmessage('PAUSE')
 
     def unpause(self):
+        """ Resume playing current file if paused."""
         if self._state == self.STATE_PAUSED:
             self.sendmessage('PAUSE')
 
     def stop(self):
+        """ Stop any playing media."""
         self.sendmessage('STOP')
 
     def quit(self):
+        """ Shut down mpg123 instance."""
         self.sendmessage('QUIT')
 
     def setvolume(self, newvol=0.0):
+        """ Set new volume in percent."""
         if 0.0 <= newvol <= 100.0:
             self.sendmessage('VOLUME ' + str(newvol))
 
     def seek(self, seek_pos=0.0):
+        """ Seek to file position in seconds."""
         self.sendmessage('JUMP ' + str(seek_pos) + 's')
 
+    @property
     def getduration(self):
+        """ Return duration in seconds."""
         return self._duration
 
+    @property
     def getposition(self):
+        """ Return current file offset in seconds."""
         return self._currentoffset
